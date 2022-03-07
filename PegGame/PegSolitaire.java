@@ -209,14 +209,15 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
     }
 
     /**
-     * Number of pegs in the game
+     * This function will count the number of pegs in the board
      * 
-     * @return Number of Pegs
+     * @return The number of pegs in the board.
      */
     @Override
     public int numberOfPegs() {
 
         int numOfPegs = 0;
+        // this loop will count the number of pegs in the board
         for (int i = 0; i < rowNumber; i++) {
 
             for (int k = 0; k < colNumber; k++) {
@@ -673,44 +674,55 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
     public void chooseBoard() {
         JFrame fm = new JFrame("CHOOSE BOARD TYPE");
 
+        // adding a button the frame
         JLabel boards = new JLabel();
         boards.setIcon(new ImageIcon("PegGame/boards.jpg"));
         boards.setBounds(20, 20, 600, 200);
 
         ButtonGroup boardGroup = new ButtonGroup();
 
+        // adding a button the frame
         JLabel board1 = new JLabel("1)");
         board1.setText("1)");
         board1.setBounds(75, 250, 20, 20);
 
+        // adding a button the frame
         JRadioButton firstBoard = new JRadioButton("1", true);
         firstBoard.setBounds(88, 250, 20, 20);
 
+        // adding a button the frame
         JLabel board2 = new JLabel("2)");
         board2.setText("2)");
         board2.setBounds(180, 250, 20, 20);
 
+        // adding a button the frame
         JRadioButton secondBoard = new JRadioButton("2");
         secondBoard.setBounds(192, 250, 20, 20);
 
+        // adding a button the frame
         JLabel board3 = new JLabel("3)");
         board3.setText("3)");
         board3.setBounds(285, 250, 20, 20);
 
+        // adding a button the frame
         JRadioButton thirdBoard = new JRadioButton("3");
         thirdBoard.setBounds(297, 250, 20, 20);
 
+        // adding a button the frame
         JLabel board4 = new JLabel("4)");
         board4.setText("4)");
         board4.setBounds(390, 250, 20, 20);
 
+        // adding a button the frame
         JRadioButton fourthBoard = new JRadioButton("4");
         fourthBoard.setBounds(402, 250, 20, 20);
 
+        // adding a button the frame
         JLabel board5 = new JLabel("5)");
         board5.setText("5)");
         board5.setBounds(495, 250, 20, 20);
 
+        // adding a button the frame
         JRadioButton fifthBoard = new JRadioButton("5");
         fifthBoard.setBounds(510, 250, 20, 20);
 
@@ -720,6 +732,7 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
         boardGroup.add(fourthBoard);
         boardGroup.add(fifthBoard);
 
+        // adding a button the frame
         JButton enterBoardType = new JButton("START THE GAME!");
         enterBoardType.addActionListener(new ActionListener() {
 
@@ -727,7 +740,7 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
             public void actionPerformed(ActionEvent e) {
 
                 if (firstBoard.isSelected()) {
-
+                    // if user selected the first board
                     boardType = 1;
                     rowNumber = 7;
                     colNumber = 7;
@@ -735,7 +748,7 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
 
                     startGame();
                 } else if (secondBoard.isSelected()) {
-
+                    // if user selected the second board
                     boardType = 2;
                     rowNumber = 9;
                     colNumber = 9;
@@ -744,7 +757,7 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
                     startGame();
 
                 } else if (thirdBoard.isSelected()) {
-
+                    // if user selected the third board
                     boardType = 3;
                     rowNumber = 8;
                     colNumber = 8;
@@ -753,7 +766,7 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
                     startGame();
 
                 } else if (fourthBoard.isSelected()) {
-
+                    // if user selected the fourth board
                     boardType = 4;
                     rowNumber = 7;
                     colNumber = 7;
@@ -762,7 +775,7 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
                     startGame();
 
                 } else if (fifthBoard.isSelected()) {
-
+                    // if user selected the fifth board
                     boardType = 5;
                     rowNumber = 9;
                     colNumber = 9;
@@ -778,6 +791,7 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
 
         });
 
+        // set a bound to the frame
         enterBoardType.setBounds(220, 350, 200, 50);
 
         fm.add(board1);
