@@ -38,17 +38,15 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
 
     /**
      * Default constructer of PegSolitaire
-     * 
-     * 
      */
     public PegSolitaire() {
         chooseBoard();
     }
 
     /**
-     * clone method of PegSolitaire
+     * Clones the PegSolitaire object and returns the clone
      * 
-     * @return PegSolitaire Object
+     * @return The clone of the PegSolitaire object.
      */
     @Override
     public PegSolitaire clone() throws CloneNotSupportedException {
@@ -69,9 +67,9 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
     }
 
     /**
-     * ToString method to print PegSolitaire Details.
+     * This function is used to print the game information
      * 
-     * @return PegSolitaire class details
+     * @return The string representation of the game.
      */
     @Override
     public String toString() {
@@ -95,6 +93,577 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
         gameInfo.append("\n");
 
         return gameInfo.toString();
+    }
+
+    /**
+     * Save the current game to the file
+     * 
+     * @param filename Name of the file
+     */
+    @Override
+    public void saveGame(String filename) {
+
+        PrintWriter writeFile;
+
+        try {
+            writeFile = new PrintWriter(filename);
+
+            writeFile.println(this.toString());
+
+            writeFile.close();
+
+        } catch (FileNotFoundException e) {
+
+            System.out.println(e.toString());
+
+        }
+    }
+
+    /**
+     * Load a game from a file
+     * 
+     * @param filename Name of the file
+     */
+    @Override
+    public void loadGame(String filename) {
+
+        int lineNum = 0, i, k, j;
+
+        try {
+            File fileObj = new File(filename);
+
+            Scanner readFile = new Scanner(fileObj);
+
+            while (readFile.hasNextLine()) {
+
+                String line = readFile.nextLine();
+
+                if (lineNum == 0) {
+
+                    boardType = Integer.parseInt(line);
+                }
+
+                else if (lineNum == 1) {
+
+                    rowNumber = Integer.parseInt(line);
+                }
+
+                else if (lineNum == 2) {
+
+                    colNumber = Integer.parseInt(line);
+                }
+
+                else if (lineNum == 3) {
+
+                    board = new int[rowNumber][colNumber];
+
+                    j = 0;
+                    for (i = 0; i < rowNumber; i++) {
+                        for (k = 0; k < colNumber; k++) {
+                            board[i][k] = Character.getNumericValue(line.charAt(j));
+                            j++;
+                        }
+                    }
+
+                }
+
+                else if (lineNum == 4) {
+                    moves.clear();
+
+                    StringBuffer takeMove = new StringBuffer();
+                    k = 0;
+
+                    for (i = 0; i < line.length(); i++) {
+
+                        k++;
+                        takeMove.append(line.charAt(i));
+
+                        if (k == 3) {
+                            moves.add(takeMove.toString());
+                            takeMove.setLength(0);
+                            k = 0;
+                        }
+                    }
+
+                }
+                lineNum++;
+            }
+
+            pegBoard.setLayout(new GridLayout(rowNumber, colNumber));
+            paintScreen();
+
+            if (endGame()) {
+                paintScreen();
+                JFrame fr = new JFrame();
+                JOptionPane.showMessageDialog(fr, "CONGRATULATIONS! GAME HAS FINISHED. YOUR SCORE: " + numberOfPegs());
+                fr.dispose();
+            }
+
+            readFile.close();
+
+        } catch (FileNotFoundException e) {
+            System.out.println(e.toString());
+
+        }
+
+    }
+
+    /**
+     * Number of pegs in the game
+     * 
+     * @return Number of Pegs
+     */
+    @Override
+    public int numberOfPegs() {
+
+        int numOfPegs = 0;
+        for (int i = 0; i < rowNumber; i++) {
+
+            for (int k = 0; k < colNumber; k++) {
+
+                if (board[i][k] == 1) {
+                    numOfPegs++;
+
+                }
+            }
+        }
+        return numOfPegs;
+    }
+
+    /**
+     * Number of pegs taken in the game
+     * 
+     * @return Number of Pegs Taken
+     */
+    @Override
+    public int numberOfPegsTaken() {
+
+        return numberOfEmpty() - 1;
+    }
+
+    /**
+     * Number of Empty cells in the game
+     * 
+     * @return Number of Empty Cells
+     */
+    @Override
+    public int numberOfEmpty() {
+
+        int numOfEmpty = 0;
+        for (int i = 0; i < rowNumber; i++) {
+
+            for (int k = 0; k < colNumber; k++) {
+
+                if (board[i][k] == 2) {
+                    numOfEmpty++;
+
+                }
+            }
+        }
+        return numOfEmpty;
+    }
+
+    /**
+     * Fill the grid layout with cells
+     * 
+     */
+    @Override
+    public void fillBoard() {
+        for (int i = 0; i < rowNumber; i++) {
+            for (int k = 0; k < colNumber; k++) {
+
+                JButton btn = new JButton();
+                btn.setToolTipText(Integer.toString(i) + Integer.toString(k));
+
+                btn.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        currentCell = btn.getToolTipText();
+                        popupmenu.show(pegBoard, btn.getX() + 20, btn.getY() + 40);
+
+                    }
+                });
+
+                if (board[i][k] == 0) {
+                    btn.setBackground(Color.GRAY);
+                    btn.setEnabled(false);
+                    pegBoard.add(btn);
+                } else if (board[i][k] == 1) {
+                    btn.setBackground(Color.GREEN);
+                    pegBoard.add(btn);
+                } else if (board[i][k] == 2) {
+                    btn.setBackground(Color.WHITE);
+                    pegBoard.add(btn);
+                }
+            }
+        }
+    }
+
+    /**
+     * Check move if it is valid or not
+     * 
+     * @param row       Row index of the move
+     * @param col       Column index of the move
+     * @param direction Direction of the move
+     * @return True or False
+     */
+    @Override
+    public Boolean checkMove(int row, int col, char direction) {
+
+        if (board[row][col] == 1) {
+            if (direction == 'u') {
+                if (row - 2 >= 0) {
+                    if (board[row - 1][col] == 1) {
+                        if (board[row - 2][col] == 2) {
+
+                            return true;
+                        }
+                    }
+                }
+
+            } else if (direction == 'd') {
+                if (row + 2 < board.length) {
+                    if (board[row + 1][col] == 1) {
+                        if (board[row + 2][col] == 2) {
+
+                            return true;
+                        }
+                    }
+                }
+
+            } else if (direction == 'r') {
+                if (col + 2 < board[0].length) {
+                    if (board[row][col + 1] == 1) {
+                        if (board[row][col + 2] == 2) {
+
+                            return true;
+                        }
+                    }
+                }
+
+            } else if (direction == 'l') {
+                if (col - 2 >= 0) {
+                    if (board[row][col - 1] == 1) {
+                        if (board[row][col - 2] == 2) {
+
+                            return true;
+                        }
+                    }
+                }
+
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if there is any move left
+     * 
+     * @return True or False
+     */
+    @Override
+    public Boolean endGame() {
+
+        // Checking if there is any valid move left
+        for (int i = 0; i < rowNumber; i++) {
+            for (int k = 0; k < colNumber; k++) {
+                if (checkMove(i, k, 'u')) {
+                    return false;
+                } else if (checkMove(i, k, 'd')) {
+                    return false;
+                } else if (checkMove(i, k, 'r')) {
+                    return false;
+                } else if (checkMove(i, k, 'l')) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+
+    }
+
+    /**
+     * Reset the current board
+     * 
+     */
+    @Override
+    public void resetGame() {
+
+        moves.clear();
+
+        pegBoard.removeAll();
+        initializeBoard(boardType);
+        fillBoard();
+        pegBoard.revalidate();
+        pegBoard.repaint();
+
+        numOfPegs.removeAll();
+        numOfPegs.setText("SCORE (Number of Pegs):" + numberOfPegs());
+        numOfPegs.revalidate();
+        numOfPegs.repaint();
+
+        numOfEmpty.removeAll();
+        numOfEmpty.setText("Number of Empty Cells: " + numberOfEmpty());
+        numOfEmpty.revalidate();
+        numOfEmpty.repaint();
+
+        numOfPegsTaken.removeAll();
+        numOfPegsTaken.setText("Number of Pegs Taken: " + numberOfPegsTaken());
+        numOfPegsTaken.revalidate();
+        numOfPegsTaken.repaint();
+    }
+
+    /**
+     * Go back to one step before
+     */
+    @Override
+    public void undoMove() {
+
+        if (moves.size() != 0) {
+
+            String lastMove = moves.get(moves.size() - 1);
+
+            if (lastMove.charAt(2) == 'u') {
+
+                board[Character.getNumericValue(lastMove.charAt(0))][Character.getNumericValue(lastMove.charAt(1))] = 1;
+                board[Character.getNumericValue(lastMove.charAt(0)) - 1][Character
+                        .getNumericValue(lastMove.charAt(1))] = 1;
+                board[Character.getNumericValue(lastMove.charAt(0)) - 2][Character
+                        .getNumericValue(lastMove.charAt(1))] = 2;
+
+            }
+
+            else if (lastMove.charAt(2) == 'd') {
+
+                board[Character.getNumericValue(lastMove.charAt(0))][Character.getNumericValue(lastMove.charAt(1))] = 1;
+                board[Character.getNumericValue(lastMove.charAt(0)) + 1][Character
+                        .getNumericValue(lastMove.charAt(1))] = 1;
+                board[Character.getNumericValue(lastMove.charAt(0)) + 2][Character
+                        .getNumericValue(lastMove.charAt(1))] = 2;
+
+            } else if (lastMove.charAt(2) == 'r') {
+
+                board[Character.getNumericValue(lastMove.charAt(0))][Character.getNumericValue(lastMove.charAt(1))] = 1;
+                board[Character.getNumericValue(lastMove.charAt(0))][Character
+                        .getNumericValue(lastMove.charAt(1)) + 1] = 1;
+                board[Character.getNumericValue(lastMove.charAt(0))][Character
+                        .getNumericValue(lastMove.charAt(1)) + 2] = 2;
+
+            } else if (lastMove.charAt(2) == 'l') {
+
+                board[Character.getNumericValue(lastMove.charAt(0))][Character.getNumericValue(lastMove.charAt(1))] = 1;
+                board[Character.getNumericValue(lastMove.charAt(0))][Character
+                        .getNumericValue(lastMove.charAt(1)) - 1] = 1;
+                board[Character.getNumericValue(lastMove.charAt(0))][Character
+                        .getNumericValue(lastMove.charAt(1)) - 2] = 2;
+
+            }
+            moves.remove(moves.size() - 1);
+
+            paintScreen();
+
+        }
+    }
+
+    /**
+     * Making a move
+     * 
+     * @param row       Row index of the move
+     * @param col       Column index of the move
+     * @param direction Direction of the move
+     */
+    @Override
+    public void playMove(int row, int col, char direction) {
+
+        // Checking if the direction of the move is up, down, left, or right.
+        if (direction == 'u') {
+            board[row][col] = 2;
+            board[row - 1][col] = 2;
+            board[row - 2][col] = 1;
+        }
+
+        else if (direction == 'd') {
+            board[row][col] = 2;
+            board[row + 1][col] = 2;
+            board[row + 2][col] = 1;
+        } else if (direction == 'r') {
+            board[row][col] = 2;
+            board[row][col + 1] = 2;
+            board[row][col + 2] = 1;
+        } else if (direction == 'l') {
+
+            board[row][col] = 2;
+            board[row][col - 1] = 2;
+            board[row][col - 2] = 1;
+        }
+
+        String newMove = Integer.toString(row) + Integer.toString(col) + direction;
+        moves.add(newMove);
+
+        // Checking if the game is over. If it is, it will display a message box with
+        // the score.
+        if (endGame()) {
+            paintScreen();
+            JFrame fr = new JFrame();
+            JOptionPane.showMessageDialog(fr, "CONGRATULATIONS! GAME HAS FINISHED. YOUR SCORE: " + numberOfPegs());
+            fr.dispose();
+        }
+
+    }
+
+    /**
+     * Paint game to the screen
+     */
+    @Override
+    public void paintScreen() {
+
+        pegBoard.removeAll();
+        fillBoard();
+        pegBoard.revalidate();
+        pegBoard.repaint();
+
+        numOfPegs.removeAll();
+        numOfPegs.setText("SCORE (Number of Pegs):" + numberOfPegs());
+        numOfPegs.revalidate();
+        numOfPegs.repaint();
+
+        numOfEmpty.removeAll();
+        numOfEmpty.setText("Number of Empty Cells: " + numberOfEmpty());
+        numOfEmpty.revalidate();
+        numOfEmpty.repaint();
+
+        numOfPegsTaken.removeAll();
+        numOfPegsTaken.setText("Number of Pegs Taken: " + numberOfPegsTaken());
+        numOfPegsTaken.revalidate();
+        numOfPegsTaken.repaint();
+    }
+
+    /**
+     * Computer will make a one move
+     */
+    @Override
+    public void playAuto() {
+
+        // check if the game has ended or not
+        if (endGame()) {
+            return;
+        }
+
+        Random randomNum = new Random();
+
+        String directions = "udrl";
+
+        int randomRow = randomNum.nextInt(rowNumber);
+        int randomColumn = randomNum.nextInt(colNumber);
+        int randomIndex = randomNum.nextInt(4);
+
+        // The above code is generating a random number for the row and column and then
+        // checking if the move is
+        // valid. If the move is not valid, then it will generate a new random number
+        // and check again.
+        while (!checkMove(randomRow, randomColumn, directions.charAt(randomIndex))) {
+            randomRow = randomNum.nextInt(rowNumber);
+            randomColumn = randomNum.nextInt(colNumber);
+            randomIndex = randomNum.nextInt(4);
+        }
+
+        playMove(randomRow, randomColumn, directions.charAt(randomIndex));
+        paintScreen();
+
+    }
+
+    /**
+     * Computer plays the game until it ends
+     */
+    @Override
+    public void playAutoAll() {
+        while (!endGame()) {
+            playAuto();
+        }
+    }
+
+    /**
+     * This function initializes the board with the given board number
+     * 
+     * @param boardNumber the number of the board you want to use.
+     */
+    @Override
+    public void initializeBoard(int boardNumber) {
+        if (boardNumber == 1) {
+
+            int[][] board_1 = {
+                    { 0, 0, 1, 1, 1, 0, 0 },
+                    { 0, 1, 1, 1, 1, 1, 0 },
+                    { 1, 1, 1, 1, 1, 1, 1 },
+                    { 1, 1, 1, 2, 1, 1, 1 },
+                    { 1, 1, 1, 1, 1, 1, 1 },
+                    { 0, 1, 1, 1, 1, 1, 0 },
+                    { 0, 0, 1, 1, 1, 0, 0 },
+            };
+            board = board_1;
+        } else if (boardNumber == 2) {
+
+            int[][] board_2 = {
+                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+                    { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+                    { 1, 1, 1, 1, 2, 1, 1, 1, 1 },
+                    { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+
+            };
+            board = board_2;
+
+        } else if (boardNumber == 3) {
+
+            int[][] board_3 = {
+                    { 0, 0, 1, 1, 1, 0, 0, 0 },
+                    { 0, 0, 1, 1, 1, 0, 0, 0 },
+                    { 0, 0, 1, 1, 1, 0, 0, 0 },
+                    { 1, 1, 1, 1, 1, 1, 1, 1 },
+                    { 1, 1, 1, 2, 1, 1, 1, 1 },
+                    { 1, 1, 1, 1, 1, 1, 1, 1 },
+                    { 0, 0, 1, 1, 1, 0, 0, 0 },
+                    { 0, 0, 1, 1, 1, 0, 0, 0 },
+
+            };
+            board = board_3;
+
+        } else if (boardNumber == 4) {
+
+            int[][] board_4 = {
+                    { 0, 0, 1, 1, 1, 0, 0 },
+                    { 0, 0, 1, 1, 1, 0, 0 },
+                    { 1, 1, 1, 1, 1, 1, 1 },
+                    { 1, 1, 1, 2, 1, 1, 1 },
+                    { 1, 1, 1, 1, 1, 1, 1 },
+                    { 0, 0, 1, 1, 1, 0, 0 },
+                    { 0, 0, 1, 1, 1, 0, 0 },
+            };
+            board = board_4;
+        } else if (boardNumber == 5) {
+
+            int[][] board_5 = {
+                    { 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+                    { 0, 0, 1, 1, 1, 1, 1, 0, 0 },
+                    { 0, 1, 1, 1, 1, 1, 1, 1, 0 },
+                    { 1, 1, 1, 1, 2, 1, 1, 1, 1 },
+                    { 0, 1, 1, 1, 1, 1, 1, 1, 0 },
+                    { 0, 0, 1, 1, 1, 1, 1, 0, 0 },
+                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+                    { 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+
+            };
+            board = board_5;
+
+        }
+
     }
 
     /**
@@ -204,7 +773,7 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
                 }
                 fm.setVisible(false);
                 fm.dispose();
-                
+
             }
 
         });
@@ -525,564 +1094,6 @@ public class PegSolitaire implements PegSolitaireInterface, Cloneable {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(null);
         frame.setVisible(true);
-    }
-
-    /**
-     * Save the current game to the file
-     * 
-     * @param filename Name of the file
-     */
-    @Override
-    public void saveGame(String filename) {
-
-        PrintWriter writeFile;
-
-        try {
-            writeFile = new PrintWriter(filename);
-
-            writeFile.println(this.toString());
-
-            writeFile.close();
-
-        } catch (FileNotFoundException e) {
-
-            System.out.println(e.toString());
-
-        }
-    }
-
-    /**
-     * Load a game from a file
-     * 
-     * @param filename Name of the file
-     */
-    @Override
-    public void loadGame(String filename) {
-
-        int lineNum = 0, i, k, j;
-
-        try {
-            File fileObj = new File(filename);
-
-            Scanner readFile = new Scanner(fileObj);
-
-            while (readFile.hasNextLine()) {
-
-                String line = readFile.nextLine();
-
-                if (lineNum == 0) {
-
-                    boardType = Integer.parseInt(line);
-                }
-
-                else if (lineNum == 1) {
-
-                    rowNumber = Integer.parseInt(line);
-                }
-
-                else if (lineNum == 2) {
-
-                    colNumber = Integer.parseInt(line);
-                }
-
-                else if (lineNum == 3) {
-
-                    board = new int[rowNumber][colNumber];
-
-                    j = 0;
-                    for (i = 0; i < rowNumber; i++) {
-                        for (k = 0; k < colNumber; k++) {
-                            board[i][k] = Character.getNumericValue(line.charAt(j));
-                            j++;
-                        }
-                    }
-
-                }
-
-                else if (lineNum == 4) {
-                    moves.clear();
-
-                    StringBuffer takeMove = new StringBuffer();
-                    k = 0;
-
-                    for (i = 0; i < line.length(); i++) {
-
-                        k++;
-                        takeMove.append(line.charAt(i));
-
-                        if (k == 3) {
-                            moves.add(takeMove.toString());
-                            takeMove.setLength(0);
-                            k = 0;
-                        }
-                    }
-
-                }
-                lineNum++;
-            }
-
-            pegBoard.setLayout(new GridLayout(rowNumber, colNumber));
-            paintScreen();
-
-            if (endGame()) {
-                paintScreen();
-                JFrame fr = new JFrame();
-                JOptionPane.showMessageDialog(fr, "CONGRATULATIONS! GAME HAS FINISHED. YOUR SCORE: " + numberOfPegs());
-                fr.dispose();
-            }
-
-            readFile.close();
-
-        } catch (FileNotFoundException e) {
-            System.out.println(e.toString());
-
-        }
-
-    }
-
-    /**
-     * Number of pegs in the game
-     * 
-     * @return Number of Pegs
-     */
-    @Override
-    public int numberOfPegs() {
-
-        int numOfPegs = 0;
-        for (int i = 0; i < rowNumber; i++) {
-
-            for (int k = 0; k < colNumber; k++) {
-
-                if (board[i][k] == 1) {
-                    numOfPegs++;
-
-                }
-            }
-        }
-        return numOfPegs;
-    }
-
-    /**
-     * Number of pegs taken in the game
-     * 
-     * @return Number of Pegs Taken
-     */
-    @Override
-    public int numberOfPegsTaken() {
-
-        return numberOfEmpty() - 1;
-    }
-
-    /**
-     * Number of Empty cells in the game
-     * 
-     * @return Number of Empty Cells
-     */
-    @Override
-    public int numberOfEmpty() {
-
-        int numOfEmpty = 0;
-        for (int i = 0; i < rowNumber; i++) {
-
-            for (int k = 0; k < colNumber; k++) {
-
-                if (board[i][k] == 2) {
-                    numOfEmpty++;
-
-                }
-            }
-        }
-        return numOfEmpty;
-    }
-
-    /**
-     * Fill the grid layout with cells
-     * 
-     */
-    @Override
-    public void fillBoard() {
-        for (int i = 0; i < rowNumber; i++) {
-            for (int k = 0; k < colNumber; k++) {
-
-                JButton btn = new JButton();
-                btn.setToolTipText(Integer.toString(i) + Integer.toString(k));
-
-                btn.addActionListener(new ActionListener() {
-
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        currentCell = btn.getToolTipText();
-                        popupmenu.show(pegBoard, btn.getX() + 20, btn.getY() + 40);
-
-                    }
-                });
-
-                if (board[i][k] == 0) {
-                    btn.setBackground(Color.GRAY);
-                    btn.setEnabled(false);
-                    pegBoard.add(btn);
-                } else if (board[i][k] == 1) {
-                    btn.setBackground(Color.GREEN);
-                    pegBoard.add(btn);
-                } else if (board[i][k] == 2) {
-                    btn.setBackground(Color.WHITE);
-                    pegBoard.add(btn);
-                }
-            }
-        }
-    }
-
-    /**
-     * Check move if it is valid or not
-     * 
-     * @param row       Row index of the move
-     * @param col       Column index of the move
-     * @param direction Direction of the move
-     * @return True or False
-     */
-    @Override
-    public Boolean checkMove(int row, int col, char direction) {
-
-        if (board[row][col] == 1) {
-            if (direction == 'u') {
-                if (row - 2 >= 0) {
-                    if (board[row - 1][col] == 1) {
-                        if (board[row - 2][col] == 2) {
-
-                            return true;
-                        }
-                    }
-                }
-
-            } else if (direction == 'd') {
-                if (row + 2 < board.length) {
-                    if (board[row + 1][col] == 1) {
-                        if (board[row + 2][col] == 2) {
-
-                            return true;
-                        }
-                    }
-                }
-
-            } else if (direction == 'r') {
-                if (col + 2 < board[0].length) {
-                    if (board[row][col + 1] == 1) {
-                        if (board[row][col + 2] == 2) {
-
-                            return true;
-                        }
-                    }
-                }
-
-            } else if (direction == 'l') {
-                if (col - 2 >= 0) {
-                    if (board[row][col - 1] == 1) {
-                        if (board[row][col - 2] == 2) {
-
-                            return true;
-                        }
-                    }
-                }
-
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Check if there is any move left
-     * 
-     * @return True or False
-     */
-    @Override
-    public Boolean endGame() {
-
-        for (int i = 0; i < rowNumber; i++) {
-            for (int k = 0; k < colNumber; k++) {
-                if (checkMove(i, k, 'u')) {
-                    return false;
-                } else if (checkMove(i, k, 'd')) {
-                    return false;
-                } else if (checkMove(i, k, 'r')) {
-                    return false;
-                } else if (checkMove(i, k, 'l')) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-
-    }
-
-    /**
-     * Reset the current board
-     * 
-     */
-    @Override
-    public void resetGame() {
-
-        moves.clear();
-
-        pegBoard.removeAll();
-        initializeBoard(boardType);
-        fillBoard();
-        pegBoard.revalidate();
-        pegBoard.repaint();
-
-        numOfPegs.removeAll();
-        numOfPegs.setText("SCORE (Number of Pegs):" + numberOfPegs());
-        numOfPegs.revalidate();
-        numOfPegs.repaint();
-
-        numOfEmpty.removeAll();
-        numOfEmpty.setText("Number of Empty Cells: " + numberOfEmpty());
-        numOfEmpty.revalidate();
-        numOfEmpty.repaint();
-
-        numOfPegsTaken.removeAll();
-        numOfPegsTaken.setText("Number of Pegs Taken: " + numberOfPegsTaken());
-        numOfPegsTaken.revalidate();
-        numOfPegsTaken.repaint();
-    }
-
-    /**
-     * Go back to one step before
-     */
-    @Override
-    public void undoMove() {
-        if (moves.size() != 0) {
-
-            String lastMove = moves.get(moves.size() - 1);
-
-            if (lastMove.charAt(2) == 'u') {
-
-                board[Character.getNumericValue(lastMove.charAt(0))][Character.getNumericValue(lastMove.charAt(1))] = 1;
-                board[Character.getNumericValue(lastMove.charAt(0)) - 1][Character
-                        .getNumericValue(lastMove.charAt(1))] = 1;
-                board[Character.getNumericValue(lastMove.charAt(0)) - 2][Character
-                        .getNumericValue(lastMove.charAt(1))] = 2;
-
-            }
-
-            else if (lastMove.charAt(2) == 'd') {
-
-                board[Character.getNumericValue(lastMove.charAt(0))][Character.getNumericValue(lastMove.charAt(1))] = 1;
-                board[Character.getNumericValue(lastMove.charAt(0)) + 1][Character
-                        .getNumericValue(lastMove.charAt(1))] = 1;
-                board[Character.getNumericValue(lastMove.charAt(0)) + 2][Character
-                        .getNumericValue(lastMove.charAt(1))] = 2;
-
-            } else if (lastMove.charAt(2) == 'r') {
-
-                board[Character.getNumericValue(lastMove.charAt(0))][Character.getNumericValue(lastMove.charAt(1))] = 1;
-                board[Character.getNumericValue(lastMove.charAt(0))][Character
-                        .getNumericValue(lastMove.charAt(1)) + 1] = 1;
-                board[Character.getNumericValue(lastMove.charAt(0))][Character
-                        .getNumericValue(lastMove.charAt(1)) + 2] = 2;
-
-            } else if (lastMove.charAt(2) == 'l') {
-
-                board[Character.getNumericValue(lastMove.charAt(0))][Character.getNumericValue(lastMove.charAt(1))] = 1;
-                board[Character.getNumericValue(lastMove.charAt(0))][Character
-                        .getNumericValue(lastMove.charAt(1)) - 1] = 1;
-                board[Character.getNumericValue(lastMove.charAt(0))][Character
-                        .getNumericValue(lastMove.charAt(1)) - 2] = 2;
-
-            }
-            moves.remove(moves.size() - 1);
-
-            paintScreen();
-
-        }
-    }
-
-    /**
-     * Making a move
-     * 
-     * @param row       Row index of the move
-     * @param col       Column index of the move
-     * @param direction Direction of the move
-     */
-    @Override
-    public void playMove(int row, int col, char direction) {
-        if (direction == 'u') {
-            board[row][col] = 2;
-            board[row - 1][col] = 2;
-            board[row - 2][col] = 1;
-        }
-
-        else if (direction == 'd') {
-            board[row][col] = 2;
-            board[row + 1][col] = 2;
-            board[row + 2][col] = 1;
-        } else if (direction == 'r') {
-            board[row][col] = 2;
-            board[row][col + 1] = 2;
-            board[row][col + 2] = 1;
-        } else if (direction == 'l') {
-
-            board[row][col] = 2;
-            board[row][col - 1] = 2;
-            board[row][col - 2] = 1;
-        }
-
-        String newMove = Integer.toString(row) + Integer.toString(col) + direction;
-        moves.add(newMove);
-
-        if (endGame()) {
-            paintScreen();
-            JFrame fr = new JFrame();
-            JOptionPane.showMessageDialog(fr, "CONGRATULATIONS! GAME HAS FINISHED. YOUR SCORE: " + numberOfPegs());
-            fr.dispose();
-        }
-
-    }
-
-    /**
-     * Paint game to the screen
-     */
-    @Override
-    public void paintScreen() {
-
-        pegBoard.removeAll();
-        fillBoard();
-        pegBoard.revalidate();
-        pegBoard.repaint();
-
-        numOfPegs.removeAll();
-        numOfPegs.setText("SCORE (Number of Pegs):" + numberOfPegs());
-        numOfPegs.revalidate();
-        numOfPegs.repaint();
-
-        numOfEmpty.removeAll();
-        numOfEmpty.setText("Number of Empty Cells: " + numberOfEmpty());
-        numOfEmpty.revalidate();
-        numOfEmpty.repaint();
-
-        numOfPegsTaken.removeAll();
-        numOfPegsTaken.setText("Number of Pegs Taken: " + numberOfPegsTaken());
-        numOfPegsTaken.revalidate();
-        numOfPegsTaken.repaint();
-    }
-
-    /**
-     * Computer will make a one move
-     */
-    @Override
-    public void playAuto() {
-
-        if (endGame()) {
-            return;
-        }
-
-        Random randomNum = new Random();
-
-        String directions = "udrl";
-
-        int randomRow = randomNum.nextInt(rowNumber);
-        int randomColumn = randomNum.nextInt(colNumber);
-        int randomIndex = randomNum.nextInt(4);
-
-        while (!checkMove(randomRow, randomColumn, directions.charAt(randomIndex))) {
-            randomRow = randomNum.nextInt(rowNumber);
-            randomColumn = randomNum.nextInt(colNumber);
-            randomIndex = randomNum.nextInt(4);
-        }
-
-        playMove(randomRow, randomColumn, directions.charAt(randomIndex));
-        paintScreen();
-
-    }
-
-    /**
-     * Computer plays the game until it ends
-     */
-    @Override
-    public void playAutoAll() {
-        while (!endGame()) {
-            playAuto();
-        }
-    }
-
-    /**
-     * Initialize the board
-     */
-    @Override
-    public void initializeBoard(int boardNumber) {
-        if (boardNumber == 1) {
-
-            int[][] board_1 = {
-                    { 0, 0, 1, 1, 1, 0, 0 },
-                    { 0, 1, 1, 1, 1, 1, 0 },
-                    { 1, 1, 1, 1, 1, 1, 1 },
-                    { 1, 1, 1, 2, 1, 1, 1 },
-                    { 1, 1, 1, 1, 1, 1, 1 },
-                    { 0, 1, 1, 1, 1, 1, 0 },
-                    { 0, 0, 1, 1, 1, 0, 0 },
-            };
-            board = board_1;
-        } else if (boardNumber == 2) {
-
-            int[][] board_2 = {
-                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-                    { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-                    { 1, 1, 1, 1, 2, 1, 1, 1, 1 },
-                    { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-
-            };
-            board = board_2;
-
-        } else if (boardNumber == 3) {
-
-            int[][] board_3 = {
-                    { 0, 0, 1, 1, 1, 0, 0, 0 },
-                    { 0, 0, 1, 1, 1, 0, 0, 0 },
-                    { 0, 0, 1, 1, 1, 0, 0, 0 },
-                    { 1, 1, 1, 1, 1, 1, 1, 1 },
-                    { 1, 1, 1, 2, 1, 1, 1, 1 },
-                    { 1, 1, 1, 1, 1, 1, 1, 1 },
-                    { 0, 0, 1, 1, 1, 0, 0, 0 },
-                    { 0, 0, 1, 1, 1, 0, 0, 0 },
-
-            };
-            board = board_3;
-
-        } else if (boardNumber == 4) {
-
-            int[][] board_4 = {
-                    { 0, 0, 1, 1, 1, 0, 0 },
-                    { 0, 0, 1, 1, 1, 0, 0 },
-                    { 1, 1, 1, 1, 1, 1, 1 },
-                    { 1, 1, 1, 2, 1, 1, 1 },
-                    { 1, 1, 1, 1, 1, 1, 1 },
-                    { 0, 0, 1, 1, 1, 0, 0 },
-                    { 0, 0, 1, 1, 1, 0, 0 },
-            };
-            board = board_4;
-        } else if (boardNumber == 5) {
-
-            int[][] board_5 = {
-                    { 0, 0, 0, 0, 1, 0, 0, 0, 0 },
-                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-                    { 0, 0, 1, 1, 1, 1, 1, 0, 0 },
-                    { 0, 1, 1, 1, 1, 1, 1, 1, 0 },
-                    { 1, 1, 1, 1, 2, 1, 1, 1, 1 },
-                    { 0, 1, 1, 1, 1, 1, 1, 1, 0 },
-                    { 0, 0, 1, 1, 1, 1, 1, 0, 0 },
-                    { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-                    { 0, 0, 0, 0, 1, 0, 0, 0, 0 },
-
-            };
-            board = board_5;
-
-        }
-
     }
 
     private int[][] board;
